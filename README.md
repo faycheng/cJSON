@@ -1,4 +1,4 @@
-﻿# cJSON官方文档翻译
+# cJSON官方文档翻译
 
 项目预期目标
 >* 文档翻译
@@ -140,9 +140,8 @@ Number类型节点有valueint和valuedouble。如果你想要整形值，读取v
 
 所有的节点都是一个链表，都具有string值。string表示节点的名称。在上述例子中，name都是指string变量。你可以将string理解为JSON节点变量的名称（节点的名称）。
 
-现在你可很容易的遍历链表，用任何你喜欢的方式解析JSON。
 你能够调用cJSON_Parse去得到一个解析后的cJSON节点，然后你能够根据这个根节点遍历整个节点树。当你得到cJSON_Parse解析后的结果后，你也可以使用自己的词法分析函数处理节点树。如果你想要构建一个解析器的回调函数，下面的代码是一个不错的例子（这是一个很简单的例子，只适用特定情况，事实上，但你真正使用自己的词法分析时，会比较复杂）。
-```c
+```
 void parse_and_callback(cJSON *item,const char *prefix)
 {
 	while (item)
@@ -156,8 +155,61 @@ void parse_and_callback(cJSON *item,const char *prefix)
 	}
 }
 ```
+除此之外，你可能也想要迭代解析节点。
+你能够使用下列方式：
+```
+void parse_object(cJSON *item)
+{
+	int i; 
+	for (i=0;i<cJSON_GetArraySize(item);i++)
+	{
+		cJSON *subitem=cJSON_GetArrayItem(item,i);
+		// handle subitem.	
+	}
+}
+```
+或者，使用手工模式解析节点：
+```
+void parse_object(cJSON *item)
+{
+	cJSON *subitem=item->child;
+	while (subitem)
+	{
+		// handle subitem
+		if (subitem->child) parse_object(subitem->child);
+		
+		subitem=subitem->next;
+	}
+}
+```
+这是一个很简单的回调解析器。
 
+This should cover most uses you'll find for parsing. The rest should be possible
+这篇文章应该包含了大部分需要使用的查询和解析操作。如果你还有所疑惑，那么可以阅读项目源码，该项目源码并不复杂。
+
+
+上述的示例代码已经能够完成构建解析JSON数据的需求。
+当然，你也能够用自己的函数去构建cJSON节点。如果你有一个解析处理方式，你能够手动的去处理。
+例如，你能够用以下的方式构建一个数组对象：
+```
+cJSON *objects[24];
+
+cJSON *Create_array_of_anything(cJSON **items,int num)
+{
+	int i;cJSON *prev, *root=cJSON_CreateArray();
+	for (i=0;i<24;i++)
+	{
+		if (!i)	root->child=objects[i];
+		else	prev->next=objects[i], objects[i]->prev=prev;
+		prev=objects[i];
+	}
+	return root;
+}
+```
+
+当你使用cJSON_Print, 会返回JSON结构的字符串。
+
+test.c文件中的代码含有大量解析使用cJSON的例子，你可以通过阅读test.c来详细了解cJSON的使用。
 
 ----------
-备注：官方文档翻译暂时停止，因为关于cJSON中callback部分尚不了解，待源码分析到位后，在来分析这部分文档。如果希望了解callback内容，可以查看官方原始文档README_EN。
 
